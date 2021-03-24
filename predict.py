@@ -2,6 +2,8 @@ import argparse
 import os
 from pathlib import Path
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from keras.models import load_model
 from matplotlib import pyplot
 from tqdm import tqdm
