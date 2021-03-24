@@ -1,6 +1,12 @@
+# Disable Tensorflow debugging information
+# https://stackoverflow.com/a/42121886
+# Desablita as mensagens de erro do tensorflow
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
-from keras.layers import Dense, Input, Flatten, Reshape
+from keras.layers import Dense, Flatten, Reshape
 from keras.losses import MSE
 
 import numpy
