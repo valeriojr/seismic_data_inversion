@@ -23,6 +23,7 @@ def main():
     args = parser.parse_args()
 
     _, _, X_test, Y_test = dataset.load_data(args.data_path, mode='binary')
+    X_test = numpy.reshape(X_test, (*X_test.shape, 1))
     model = load_model(args.model_path)
     output_path = Path(args.output_path)
 
