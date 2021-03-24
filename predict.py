@@ -4,7 +4,6 @@ from pathlib import Path
 
 from keras.models import load_model
 from matplotlib import pyplot
-import numpy
 from tqdm import tqdm
 
 import dataset
@@ -20,16 +19,10 @@ def main():
     args = parser.parse_args()
 
     _, _, X_test, Y_test = dataset.load_data(args.data_path, mode='binary')
-    X_test = numpy.reshape(X_test, (X_test.shape[0], X_test.shape[1] * X_test.shape[2]))
-    Y_test = numpy.reshape(Y_test, (Y_test.shape[0], Y_test.shape[1] * Y_test.shape[2]))
     model = load_model(args.model_path)
     output_path = Path(args.output_path)
 
     predict = model.predict(X_test)
-
-    X_test = numpy.reshape(X_test, (X_test.shape[0], 201, 51))
-    Y_test = numpy.reshape(Y_test, (Y_test.shape[0], 101, 51))
-    predict = numpy.reshape(predict, (X_test.shape[0], 101, 51))
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
