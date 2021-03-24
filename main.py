@@ -1,6 +1,6 @@
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
-from keras.layers import Dense, Input
+from keras.layers import Dense, Input, Flatten, Reshape
 from keras.losses import MSE
 
 import numpy
@@ -11,17 +11,21 @@ import dataset
 def main():
     X_train, Y_train, X_test, Y_test = dataset.load_data('../Problema1-Petrobras', mode='binary')
 
-    input_shape = X_train[0].shape[0] * X_train[0].shape[1]
-    output_shape = Y_train[0].shape[0] * Y_train[0].shape[1]
-
-    X_train = numpy.reshape(X_train, (len(X_train), input_shape))
-    Y_train = numpy.reshape(Y_train, (len(Y_train), output_shape))
-    X_test = numpy.reshape(X_test, (len(X_test), input_shape))
-    Y_test = numpy.reshape(Y_test, (len(Y_test), output_shape))
+    # Nesse caso o shape de entrada/saída será igual ao shape de X[i] e Y[i]
+    input_shape = X_train.shape[1:]
+    output_shape = Y_train.shape[1:]
 
     model = Sequential()
-    model.add(Input(shape=(input_shape,)))
-    model.add(Dense(units=output_shape, activation='relu'))
+
+    model.add(Flatten(input_shape=input_shape))
+
+    # Aqui são adicionadas as camadas que interessam
+    model.add(Dense(units=output_shape[0] * output_shape[1], activation='relu'))
+
+    # Can a neural network be configured to output a matrix in Keras?
+    # https://stackoverflow.com/a/55976308
+    # Faz um reshape na saída da rede para ter o mesmo shape dos dados
+    model.add(Reshape(output_shape))
 
     model.compile(optimizer='adam', loss=MSE, metrics=['mse'])
 
