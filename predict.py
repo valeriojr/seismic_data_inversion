@@ -34,12 +34,14 @@ def main():
 
     for i in tqdm(range(predict.shape[0])):
         fig = pyplot.figure(figsize=(10, 5))
-        gs = gridspec.GridSpec(1, 4, width_ratios=[1, 1, 1, 4])
+        width_ratios = [3, 2, 2, 2, 4]
+        gs = gridspec.GridSpec(1, len(width_ratios), width_ratios=width_ratios)
 
         seismogram_ax = fig.add_subplot(gs[0, 0])
         model_ax = fig.add_subplot(gs[0, 1])
         predict_ax = fig.add_subplot(gs[0, 2])
-        error_ax = fig.add_subplot(gs[0, 3:])
+        predict_mean_ax = fig.add_subplot(gs[0, 3])
+        error_ax = fig.add_subplot(gs[0, 4:])
 
         seismogram_ax.set_title('Sismograma')
         seismogram_ax.set_adjustable('datalim')
@@ -53,8 +55,16 @@ def main():
         predict_ax.set_adjustable('datalim')
         predict_ax.imshow(predict[i])
 
-        # Erro
         mean = numpy.mean(predict[i], axis=1)
+        mean_tiled = numpy.zeros(predict.shape[1:])
+        for j in range(predict.shape[2]):
+            mean_tiled[:, j] = mean
+
+        predict_mean_ax.set_title('Resultado médio da rede')
+        predict_mean_ax.set_adjustable('datalim')
+        predict_mean_ax.imshow(mean_tiled)
+
+        # Erro
         ground_truth = Y_test[i][:, 0]
         # relative_error = numpy.fabs((ground_truth - mean)/ground_truth)
         error_ax.set_title('Erro')
