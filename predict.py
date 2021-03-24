@@ -6,6 +6,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from keras.models import load_model
 from matplotlib import pyplot
+from matplotlib import gridspec
+import numpy
 from tqdm import tqdm
 
 import dataset
@@ -30,17 +32,33 @@ def main():
         os.mkdir(output_path)
 
     for i in tqdm(range(predict.shape[0])):
-        fig = pyplot.figure()
-        seismogram_ax = fig.add_subplot(131)
-        model_ax = fig.add_subplot(132)
-        predict_ax = fig.add_subplot(133)
+        fig = pyplot.figure(figsize=(10, 5))
+        gs = gridspec.GridSpec(1, 4, width_ratios=[1, 1, 1, 4])
 
-        seismogram_ax.set_xlabel('Sismograma')
-        seismogram_ax.imshow(X_test[i], 'gray')
-        model_ax.set_xlabel('Modelo')
+        seismogram_ax = fig.add_subplot(gs[0, 0])
+        model_ax = fig.add_subplot(gs[0, 1])
+        predict_ax = fig.add_subplot(gs[0, 2])
+        error_ax = fig.add_subplot(gs[0, 3:])
+
+        seismogram_ax.set_title('Sismograma')
+        seismogram_ax.set_adjustable('datalim')
+        seismogram_ax.imshow(X_test[i], cmap='gray', aspect='auto')
+
+        model_ax.set_title('Modelo')
+        model_ax.set_adjustable('datalim')
         model_ax.imshow(Y_test[i])
-        predict_ax.set_xlabel('Resultado da rede')
+
+        predict_ax.set_title('Resultado da rede')
+        predict_ax.set_adjustable('datalim')
         predict_ax.imshow(predict[i])
+
+        # Erro
+        mean = numpy.mean(predict[i], axis=1)
+        ground_truth = Y_test[i][:, 0]
+        # relative_error = numpy.fabs((ground_truth - mean)/ground_truth)
+        error_ax.set_title('Erro')
+        error_ax.plot(ground_truth, 'k')
+        error_ax.plot(mean, 'r')
 
         pyplot.savefig(output_path / f'predict_{i}.{args.format}')
         pyplot.close(fig)
