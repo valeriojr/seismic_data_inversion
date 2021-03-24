@@ -53,7 +53,7 @@ def main():
     model.add(MaxPooling2D())
     model.add(Flatten())
     model.add(Dense(units=2048, activation='tanh'))
-    model.add(Dense(units=2048, activation='tanh'))
+    model.add(Dense(units=2048 , activation='tanh'))
     model.add(Dense(units=output_shape[0] * output_shape[1]))
 
     # Can a neural network be configured to output a matrix in Keras?
