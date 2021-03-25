@@ -71,6 +71,7 @@ def plot_results(X, Y, predict, path, format):
     ax.hlines([relative_errors.mean()], 0, len(predict), 'r')
     ax.set_xlabel('Exemplo')
     ax.set_ylabel('Erro relativo')
+    ax.set_ylim(0, 150)
     pyplot.savefig(path / f'relative_error.{format}')
 
 
