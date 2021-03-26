@@ -7,16 +7,14 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from matplotlib import pyplot, gridspec
-from tensorflow.python.keras.activations import swish, softsign, softplus
-from tqdm import tqdm
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+from matplotlib import pyplot
+from tqdm import tqdm
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Reshape, Conv2D, MaxPooling2D, Input
-from keras.losses import MAE, MSE
 import numpy
 
 import dataset
@@ -54,7 +52,7 @@ def plot_results(X, Y, predict, path, format):
 
         # Erro
         ground_truth = Y[i][:, 0]
-        relative_error = 100.0 * numpy.fabs((ground_truth - mean)/ground_truth).mean()
+        relative_error = 100.0 * numpy.fabs((ground_truth - mean) / ground_truth).mean()
         relative_errors[i] = relative_error
         error_ax.set_title(f'Erro relativo = {relative_error:.2f}%')
         error_ax.set_ylabel('Velocidade')
@@ -65,14 +63,17 @@ def plot_results(X, Y, predict, path, format):
         pyplot.savefig(path / f'prediction_{i}.{format}')
         pyplot.close(figure)
 
+    tqdm.write(f'min: {relative_errors.min()}, mean: {relative_errors.mean()}, max: {relative_errors.max()}')
+
     figure = pyplot.figure(figsize=(8, 6))
     ax = figure.add_subplot(111)
-    ax.plot(relative_errors, 'k')
-    ax.hlines([relative_errors.mean()], 0, len(predict), 'r')
+    ax.plot(relative_errors, 'k', label='Erro relativo')
+    ax.hlines([relative_errors.mean()], 0, len(predict), 'r', label='Erro relativo médio')
     ax.set_xlabel('Exemplo')
     ax.set_ylabel('Erro relativo')
     ax.set_ylim(0, 150)
-    pyplot.savefig(path / f'relative_error.{format}')
+    ax.legend()
+    pyplot.savefig(path / f'relative_error_{relative_errors.mean():.2f}.{format}')
 
 
 def main():
@@ -120,12 +121,15 @@ def main():
     model.add(Input(shape=input_shape))
 
     # Aqui são adicionadas as camadas que interessam
-    model.add(Conv2D(filters=32, kernel_size=(5, 5), activation=softplus))
+    model.add(Conv2D(filters=32, kernel_size=(7, 7), activation='elu'))
     model.add(MaxPooling2D())
-    model.add(Conv2D(filters=32, kernel_size=(5, 5), activation=softplus))
+    model.add(Conv2D(filters=32, kernel_size=(5, 5), activation='elu'))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='elu'))
     model.add(MaxPooling2D())
     model.add(Flatten())
-    model.add(Dense(units=2048))
+    model.add(Dense(units=512, activation='relu'))
+    model.add(Dense(units=512))
     # model.add(Dense(units=2048, activation='tanh'))
     model.add(Dense(units=output_shape[0] * output_shape[1]))
 
@@ -133,7 +137,7 @@ def main():
     # https://stackoverflow.com/a/55976308
     # Faz um reshape na saída da rede para ter o mesmo shape dos dados
     model.add(Reshape(output_shape))
-    model.compile(optimizer='adam', loss=MSE, metrics=['mse'])
+    model.compile(optimizer='adam', loss='huber', metrics=['mae', 'mse', 'mape'])
 
     if args.print_summary:
         model.summary()
@@ -148,7 +152,7 @@ def main():
                         batch_size=args.batch_size,
                         epochs=args.epochs,
                         callbacks=[
-                            EarlyStopping(patience=args.patience),
+                            EarlyStopping(patience=args.patience, monitor='val_mape', mode='min'),
                             ModelCheckpoint(model_dir / 'model.h5', save_best_only=True)
                         ],
                         validation_data=(X_test, Y_test),
